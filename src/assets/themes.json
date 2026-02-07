@@ -1,0 +1,20 @@
+{
+    "Moonlit Mist": {
+        "background": "#393d3f",
+        "surface": "#546a7b",
+        "primary": "#62929e",
+        "secondary": "#c6c5b9",
+        "on_primary": "#393d3f",
+        "on_surface": "#fdfdff",
+        "outline" : "#c6c5b9"
+    },
+    "Gothic Noir": {
+        "background": "#000000",
+        "surface": "#1a1a1a",
+        "primary": "#D1D0D0",
+        "secondary": "#5C4E4E",
+        "on_primary": "#000000",
+        "on_surface": "#ffffff",
+        "outline": "#5C4E4E"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "theme": "Moonlist Mist",
+    "obs_password": "",
+    "min_players": 2,
+    "max_players": 20,
+    "mappings": {
+        "Player 1 Name": "Mic/Aux",
+        "Player 1 Score": "Mic/Aux",
+        "Player 1 Char": "Mic/Aux",
+        "Player 2 Name": "camn",
+        "Player 2 Score": null,
+        "Player 2 Char": "Desktop Audio",
+        "Round Title": null,
+        "Tournament Title": null,
+        "Scrolling Text": "camn",
+        "Bracket URL": null,
+        "Caster 1": null,
+        "Caster 2": "Mic/Aux",
+        "Set Score": null,
+        "Match Score": "Scene",
+        "trigger": "obs_source"
+    }
+}
