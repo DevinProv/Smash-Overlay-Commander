@@ -1,5 +1,5 @@
-import threading
 import flet as ft
+import threading
 from components.counter import CounterInput
 from logic.charmanager import char_manager
 
@@ -65,30 +65,27 @@ class PlayerCard(ft.Container):
                 controls=[self.btn_minus, self.score_display, self.btn_plus],
             ),
         )
-        self.name_display = ft.Text(
-            self.player_name, size=24, weight="bold", expand=True
-        )
         self.name_input = ft.TextField(
             value=self.player_name,
-            autofocus=True,
-            height=30,
-            text_size=20,
+            text_size=24,
+            text_style=ft.TextStyle(weight="bold"),
+            height=40,
             content_padding=5,
             expand=True,
-            on_submit=self._toggle_name_edit,
-            on_tap_outside=lambda e: (
-                self._toggle_name_edit(e) if self.is_editing_name else None
-            ),
-            visible=False,
-            border_color="outline",
+            read_only=True,
+            border_color="transparent",
+            bgcolor="transparent",
+            on_focus=self._on_name_focus,
+            on_submit=self._save_name,
+            on_blur=self._save_name,
         )
-        self.edit_icon = ft.IconButton(
-            ft.Icons.EDIT,
-            tooltip="Edit Name",
-            icon_size=16,
-            on_click=self._toggle_name_edit,
+        self.name_wrapper = ft.Container(
+            content=self.name_input,
+            on_click=self._enable_name_edit,
+            expand=True,
+            padding=0,
         )
-
+        
         handle_control = drag_handle if drag_handle else ft.Container()
 
         self.header_row = ft.Row(
@@ -99,13 +96,7 @@ class PlayerCard(ft.Container):
                     controls=[
                         handle_control,
                         ft.Container(width=10),
-                        
-                        ft.Container(
-                            content=self.name_display,
-                            on_click=self._toggle_name_edit,
-                            expand=True,
-                        ),
-                        self.name_input,
+                        self.name_wrapper
                     ],
                 )
             ],
@@ -190,7 +181,7 @@ class PlayerCard(ft.Container):
             border_color="outline",
             filled=True,
             expand=True,
-            bgcolor="black26",
+            bgcolor="black87",
             leading_icon=icon,
             on_select=on_change,
             disabled=disabled,
@@ -210,32 +201,29 @@ class PlayerCard(ft.Container):
             self.color_dropdown.disabled = False
         else:
             self.color_dropdown.disabled = True
-
-    def _toggle_name_edit(self, e):
-        self.is_editing_name = not self.is_editing_name
-
-        if self.is_editing_name:
-            self.name_display.visible = False
-            self.name_display.parent.visible = False
-            self.name_input.visible = True
-            self.name_input.value = self.player_name
-            self.update()
-            def delayed_focus():
-                self.name_input.focus()
-            threading.Timer(0.1, delayed_focus).start()
-            
-
-        else:
-            self.player_name = self.name_input.value
-            self.name_display.value = self.player_name
-            
-            self.name_display.visible = True
-            self.name_display.parent.visible = True
-            self.name_input.visible = False
-
-            self._trigger_update("name", self.player_name)
-            self.update()
-
+    def _on_name_focus(self, e):
+        self.name_input.read_only = False
+        self.name_input.border_color = "outline"
+        self.name_input.bgcolor = "surface"
+        self.update()
+    
+    def _enable_name_edit(self, e):
+        self.name_input.disabled = False
+        self.name_input.border_color = "outline"
+        self.name_input.bgcolor = "surface"
+        
+        self.update()
+        self.name_input.focus()
+    
+    def _save_name(self, e):
+        self.player_name = self.name_input.value
+        self.name_input.read_only = True
+        self.name_input.border_color = "transparent"
+        self.name_input.bgcolor = "transparent"
+        
+        self._trigger_update("name", self.player_name)
+        self.update()
+    
     def _increment_score(self, e):
         self.score += 1
         self._update_score_display()
@@ -342,7 +330,6 @@ class PlayerCard(ft.Container):
 
     def set_data(self, data):
         self.player_name = data.get("name", "Player")
-        self.name_display.value = self.player_name
         self.name_input.value = self.player_name
 
         self.score = int(data.get("score", 0))
