@@ -7,26 +7,40 @@ CONFIG_FILE = os.path.join(PROJECT_ROOT, "config.json")
 
 
 
-SUPPORTED_KEYS = [
-    "Player 1 Name", "Player 1 Score", "Player 1 Char",
-    "Player 2 Name", "Player 2 Score", "Player 2 Char",
-    "Round Title", "Tournament Title", "Scrolling Text",
-    "Bracket URL", "Caster 1", "Caster 2",
-    "Set Score", "Match Score"
+STATIC_KEYS = [
+    "Round Title",
+    "Tournament Title",
+    "Scrolling Text",
+    "Bracket URL",
+    "Caster 1 Name",
+    "Caster 2 Name",
+    "Set Score"
 ]
 
 class ConfigManager:
     def __init__(self):
-        self.defaults = {
+        self.default_settings = {
             "theme": "Moonlit Mist",
+            "obs_host": "localhost",
+            "obs_port": 4455,
             "obs_password": "",
             "min_players": 2,
             "max_players": 4,
-            "mappings": dict.fromkeys(SUPPORTED_KEYS, None)
+            "mappings": {}
         }
 
-        self.data = self.defaults.copy()
+        self.data = self.default_settings.copy()
         self.load()
+    
+    def _generate_supported_keys(self):
+        keys = STATIC_KEYS.copy()
+        
+        count = self.data.get("max_players", 4)
+        for i in range(1, count + 1):
+            keys.append(f"Player {i} Name")
+            keys.append(f"Player {i} Score")
+            keys.append(f"Player {i} Character")
+        return keys
     
     def load(self):
         if os.path.exists(CONFIG_FILE):
@@ -34,25 +48,29 @@ class ConfigManager:
                 with open(CONFIG_FILE, "r") as f:
                 
                     saved_data = json.load(f)
-                    self.data.update(saved_data)
-
+                    
+                    for key, val in saved_data.items():
+                        if key != "mappings":
+                            self.data[key] = val
+                    
+                    supported_keys = self._generate_supported_keys()
+                    
+                    current_mappings = {k: None for k in supported_keys}
+                    
                     saved_mappings = saved_data.get("mappings", {})
-                    full_mappings = self.defaults["mappings"].copy()
-                    full_mappings.update(saved_mappings)
-                    self.data["mappings"] = full_mappings
-
-                needs_save = False
-                for key in self.defaults:
-                    if key not in saved_data:
-                        print(f"Migrating config: Adding missing key '{key}' with default value.")
-                        needs_save = True
-                if needs_save:
-                    self.save()
+                    current_mappings.update(saved_mappings)
+                    
+                    clean_mappings = {k: v for k, v in current_mappings.items() if k in supported_keys}
+                    
+                    self.data["mappings"] = clean_mappings
                     
             except Exception as e:
                 print(f"Error loading config: {e}.")
-            else:
-                self.save()
+                self.data["mappings"] = {k: None for k in self._generate_supported_keys()}  
+        else:
+            print("No config file found. Creating new one.")
+            self.data["mappings"] = {k: None for k in self._generate_supported_keys()}
+            self.save()
                 
     def save(self):
         try:
@@ -69,7 +87,7 @@ class ConfigManager:
         self.save()
     
     def get_supported_keys(self):
-        return SUPPORTED_KEYS
+        return self._generate_supported_keys()
     
     def get_theme(self):
         return self.data.get("theme", "Moonlit Mist")

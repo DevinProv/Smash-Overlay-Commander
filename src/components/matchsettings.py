@@ -1,7 +1,9 @@
+import os
 import flet as ft
 from components.counter import CounterInput
 from components.playercard import PlayerCard
 from logic.config import cfg
+from logic.obs_manager import obs_manager
 
 class MatchSettingsCard(ft.Container):
     def __init__(self):
@@ -91,6 +93,21 @@ class MatchSettingsCard(ft.Container):
             
         self.player_states[player_num][key] = value
         #TODO Hook into OBS Manager and update sources
+        prefix = f"P{player_num}"
+        
+        if key == "name":
+            obs_manager.set_source_value(f"{prefix}_Name", value)
+        
+        elif key == "score":
+            obs_manager.set_source_value(f"{prefix}_Score", value)
+        
+        elif key == "color":
+            char_name = self.player_states[player_num].get("character")
+            if char_name:
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                abs_path = os.path.join(project_root, "assets", "images", char_name, value)
+
+                obs_manager.set_source_value(f"{prefix}_Character", abs_path)
     
     def _reset_player_data(self, e):
         self.player_states = {}

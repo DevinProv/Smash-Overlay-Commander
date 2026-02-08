@@ -15,6 +15,8 @@ class OBSManager:
             self.ws = obsws(self.host, self.port, self.password)
             self.ws.connect()
             print("Connected to OBS WebSocket")
+            self.refresh_data()
+            
         except ConnectionFailure as e:
             print(f"Failed to connect to OBS WebSocket: {e}")
             self.ws = None

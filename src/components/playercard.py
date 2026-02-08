@@ -186,7 +186,7 @@ class PlayerCard(ft.Container):
         
         try:
             border = ft.Border.all(2, display_color)
-        except:
+        except Exception:
             border = ft.Border.all(2, "cyan")
             if raw_color_name != "default":
                 shadow_color = "cyan"
