@@ -91,4 +91,9 @@ class ConfigManager:
     
     def get_theme(self):
         return self.data.get("theme", "Moonlit Mist")
+    
+    def set_mapping(self, key, value):
+        self.data["mappings"][key] = value
+        self.save()
+    
 cfg = ConfigManager()

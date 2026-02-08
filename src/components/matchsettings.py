@@ -19,7 +19,7 @@ class MatchSettingsCard(ft.Container):
         self.player_count = CounterInput(
             value=2, min_value=min_p, max_value=max_p, text_size=18, on_change=self._on_player_count_change
         )
-
+        print(cfg.get_mapping("Match Title"))
         self.match_title = ft.TextField(
             hint_text="e.g. Winners Finals",
             border_radius=8,
@@ -27,6 +27,7 @@ class MatchSettingsCard(ft.Container):
             text_size=14,
             height=45,
             expand=True,
+            on_change=lambda e: self._update_match_title()
         )
         self.reset_btn = ft.IconButton(ft.Icons.REFRESH, icon_color=ft.Colors.RED_800, tooltip="Reset Player Data", on_click=self._reset_player_data)
         self.cards_row = ft.Row(
@@ -56,6 +57,15 @@ class MatchSettingsCard(ft.Container):
                 
             ],
         )
+
+    def _update_match_title(self):
+        title = self.match_title.value
+        obs_source = cfg.get_mapping("Round Title")
+        if obs_source:
+            try:
+                obs_manager.set_source_value(obs_source, title)
+            except Exception as e:
+                print(f"Error updating OBS source for Round Title: {e}")
 
     def _input_group(self, label, control):
         return ft.Column(
@@ -93,26 +103,47 @@ class MatchSettingsCard(ft.Container):
             
         self.player_states[player_num][key] = value
         #TODO Hook into OBS Manager and update sources
-        prefix = f"P{player_num}"
+        new_key = f"Player {player_num} Character" if key == "color" else f"Player {player_num} {key.capitalize()}"
+        if "character" in key.lower():
+            new_value = "default.png"
+        else:
+            new_value = value
         
-        if key == "name":
-            obs_manager.set_source_value(f"{prefix}_Name", value)
+        print(f"Looking for mapping with key: '{new_key}'")
         
-        elif key == "score":
-            obs_manager.set_source_value(f"{prefix}_Score", value)
+        source = cfg.get_mapping(f"{new_key}")
+        char_name = self.player_states[player_num].get("character")
         
-        elif key == "color":
-            char_name = self.player_states[player_num].get("character")
-            if char_name:
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                abs_path = os.path.join(project_root, "assets", "images", char_name, value)
+        try:
+            if source:
+                if "character" in new_key.lower() and char_name:
+                    self._update_char_image_source(player_num, char_name, new_value)
+                else:
+                    obs_manager.set_source_value(source, new_value)
+            else:
+                print(f"No OBS source mapped for Player {player_num} {key}")
+        except Exception as e:
+            print(f"Error updating OBS source for Player {player_num} {key}: {e}")
 
-                obs_manager.set_source_value(f"{prefix}_Character", abs_path)
     
     def _reset_player_data(self, e):
         self.player_states = {}
         count = self.player_count.value
         self._generate_cards(count)
         self.cards_row.update()
+    
+    def _update_char_image_source(self, player_num, char_name, image_file):
+        source = cfg.get_mapping(f"Player {player_num} Character")
+        if not source:
+            print(f"No OBS source mapped for Player {player_num} Character")
+            return
         
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        abs_path = os.path.join(project_root, "assets", "images", char_name, image_file)
+        
+        try:
+            obs_manager.set_source_value(source, abs_path)
+            print(f"Updated character image source for Player {player_num} to {abs_path}")
+        except Exception as e:
+            print(f"Error updating character image source for Player {player_num}: {e}")
         

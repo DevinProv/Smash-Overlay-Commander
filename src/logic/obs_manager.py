@@ -33,7 +33,7 @@ class OBSManager:
     def getKindEmoji(self, kind):
         mapping = {
             "text": "📝",
-            "image": "🖼️",
+            "image": "📷",
             "browser": "🌐",
             "ffmpeg": "🎥",
             "capture": "📡",
@@ -99,6 +99,21 @@ class OBSManager:
             print(f"Updated '{source_name}' with new value: {new_value}")
         except Exception as e:
             print(f"Error setting source value in OBS: {e}")
-
+    
+    def get_source_by_name(self, source_name):
+        if not self.ws:
+            print("Not connected to OBS WebSocket")
+            return None
+        try:
+            response_inputs = self.ws.call(requests.GetInputList())
+            raw_inputs = response_inputs.getInputs()
+            for item in raw_inputs:
+                if item["inputName"] == source_name:
+                    return item
+            print(f"Source '{source_name}' not found in OBS.")
+            return None
+        except Exception as e:
+            print(f"Error retrieving source from OBS: {e}")
+            return None
 
 obs_manager = OBSManager("localhost", "4455", "zCaqLyYG10P4S5QY")
