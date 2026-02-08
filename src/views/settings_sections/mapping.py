@@ -87,7 +87,8 @@ class MappingSection(ft.Container):
                     if p_num not in player_buckets:
                         player_buckets[p_num] = []
                     player_buckets[p_num].append(k)
-                except:
+                except Exception as e:
+                    print(f"Error processing key '{k}': {e}")
                     general_keys.append(k)
             else:
                 general_keys.append(k)
@@ -136,7 +137,7 @@ class MappingSection(ft.Container):
                 controls=[tile_content],
                 expanded=(p_num <= 2),
                 shape=ft.RoundedRectangleBorder(radius=8),
-                collapsed_shape=ft.RoundedRectangleBorder(radius=8)
+                collapsed_shape=ft.RoundedRectangleBorder(radius=8),
             )
 
             self.scrollable_content.controls.append(player_tile)

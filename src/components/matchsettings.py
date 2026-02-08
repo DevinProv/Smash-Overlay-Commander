@@ -5,19 +5,24 @@ from components.playercard import PlayerCard
 from logic.config import cfg
 from logic.obs_manager import obs_manager
 
+
 class MatchSettingsCard(ft.Container):
     def __init__(self):
         super().__init__()
-        
+
         self.expand = True
         self.padding = 0
 
         self.player_states = {}
-        
+
         min_p = cfg.data.get("min_players", 2)
         max_p = cfg.data.get("max_players", 4)
         self.player_count = CounterInput(
-            value=2, min_value=min_p, max_value=max_p, text_size=18, on_change=self._on_player_count_change
+            value=2,
+            min_value=min_p,
+            max_value=max_p,
+            text_size=18,
+            on_change=self._on_player_count_change,
         )
         print(cfg.get_mapping("Match Title"))
         self.match_title = ft.TextField(
@@ -27,11 +32,20 @@ class MatchSettingsCard(ft.Container):
             text_size=14,
             height=45,
             expand=True,
-            on_change=lambda e: self._update_match_title()
+            on_change=lambda e: self._update_match_title(),
         )
-        self.reset_btn = ft.IconButton(ft.Icons.REFRESH, icon_color=ft.Colors.RED_800, tooltip="Reset Player Data", on_click=self._reset_player_data)
+        self.reset_btn = ft.IconButton(
+            ft.Icons.REFRESH,
+            icon_color=ft.Colors.RED_800,
+            tooltip="Reset Player Data",
+            on_click=self._reset_player_data,
+        )
         self.cards_row = ft.Row(
-            wrap=True,spacing=30, run_spacing=30, alignment=ft.MainAxisAlignment.CENTER, run_alignment=ft.MainAxisAlignment.CENTER
+            wrap=True,
+            spacing=30,
+            run_spacing=30,
+            alignment=ft.MainAxisAlignment.CENTER,
+            run_alignment=ft.MainAxisAlignment.CENTER,
         )
 
         self._generate_cards(2)
@@ -50,11 +64,16 @@ class MatchSettingsCard(ft.Container):
                 ),
                 ft.Divider(height=10, color="transparent"),
                 ft.Row(
-                    controls=[ft.Text("Player Controls", size=14, color="outline", weight="bold"),
-                    self.reset_btn]
+                    controls=[
+                        ft.Text(
+                            "Player Controls", size=14, color="outline", weight="bold"
+                        ),
+                        self.reset_btn,
+                    ]
                 ),
-                ft.Container(expand=True, alignment=ft.Alignment.CENTER, content=self.cards_row)
-                
+                ft.Container(
+                    expand=True, alignment=ft.Alignment.CENTER, content=self.cards_row
+                ),
             ],
         )
 
@@ -76,44 +95,49 @@ class MatchSettingsCard(ft.Container):
                 control,
             ],
         )
+
     def _on_player_count_change(self, new_value):
         self._generate_cards(new_value)
         self.cards_row.update()
-    
+
     def _generate_cards(self, count):
         self.cards_row.controls.clear()
-        
-        #TODO Implement Character List from Files
-        
+
+        # TODO Implement Character List from Files
+
         for i in range(1, count + 1):
             saved_data = self.player_states.get(i, {})
-            
+
             card = PlayerCard(
                 player_num=i,
                 initial_data=saved_data,
-                on_update=self._handle_card_update
+                on_update=self._handle_card_update,
             )
             self.cards_row.controls.append(card)
-            
+
     def _handle_card_update(self, player_num, key, value):
         print(f"Update detected: Player {player_num} - {key}: {value}")
-        
+
         if player_num not in self.player_states:
             self.player_states[player_num] = {}
-            
+
         self.player_states[player_num][key] = value
-        #TODO Hook into OBS Manager and update sources
-        new_key = f"Player {player_num} Character" if key == "color" else f"Player {player_num} {key.capitalize()}"
+        # TODO Hook into OBS Manager and update sources
+        new_key = (
+            f"Player {player_num} Character"
+            if key == "color"
+            else f"Player {player_num} {key.capitalize()}"
+        )
         if "character" in key.lower():
             new_value = "default.png"
         else:
             new_value = value
-        
+
         print(f"Looking for mapping with key: '{new_key}'")
-        
+
         source = cfg.get_mapping(f"{new_key}")
         char_name = self.player_states[player_num].get("character")
-        
+
         try:
             if source:
                 if "character" in new_key.lower() and char_name:
@@ -125,25 +149,27 @@ class MatchSettingsCard(ft.Container):
         except Exception as e:
             print(f"Error updating OBS source for Player {player_num} {key}: {e}")
 
-    
     def _reset_player_data(self, e):
         self.player_states = {}
         count = self.player_count.value
         self._generate_cards(count)
         self.cards_row.update()
-    
+
     def _update_char_image_source(self, player_num, char_name, image_file):
         source = cfg.get_mapping(f"Player {player_num} Character")
         if not source:
             print(f"No OBS source mapped for Player {player_num} Character")
             return
-        
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         abs_path = os.path.join(project_root, "assets", "images", char_name, image_file)
-        
+
         try:
             obs_manager.set_source_value(source, abs_path)
-            print(f"Updated character image source for Player {player_num} to {abs_path}")
+            print(
+                f"Updated character image source for Player {player_num} to {abs_path}"
+            )
         except Exception as e:
             print(f"Error updating character image source for Player {player_num}: {e}")
-        

@@ -16,7 +16,7 @@ class OBSManager:
             self.ws.connect()
             print("Connected to OBS WebSocket")
             self.refresh_data()
-            
+
         except ConnectionFailure as e:
             print(f"Failed to connect to OBS WebSocket: {e}")
             self.ws = None
@@ -99,7 +99,7 @@ class OBSManager:
             print(f"Updated '{source_name}' with new value: {new_value}")
         except Exception as e:
             print(f"Error setting source value in OBS: {e}")
-    
+
     def get_source_by_name(self, source_name):
         if not self.ws:
             print("Not connected to OBS WebSocket")
@@ -115,5 +115,6 @@ class OBSManager:
         except Exception as e:
             print(f"Error retrieving source from OBS: {e}")
             return None
+
 
 obs_manager = OBSManager("localhost", "4455", "zCaqLyYG10P4S5QY")

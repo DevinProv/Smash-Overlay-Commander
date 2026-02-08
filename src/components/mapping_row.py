@@ -37,14 +37,20 @@ class MappingRow(ft.Container):
             autofocus=False,
             on_select=self.update_link_status,
         )
-        
+
         self.content = ft.Row(
             controls=[
                 self.label,
                 ft.VerticalDivider(width=10, color="transparent"),
                 self.obs_input,
                 ft.Icon(ft.Icons.LINK_OFF, color="primary", size=20, tooltip="Linked"),
-                ft.IconButton(ft.Icons.REMOVE_CIRCLE, tooltip="Clear Mapping", icon_size=16, on_click=self._clear_mapping, icon_color=ft.Colors.RED_700)
+                ft.IconButton(
+                    ft.Icons.REMOVE_CIRCLE,
+                    tooltip="Clear Mapping",
+                    icon_size=16,
+                    on_click=self._clear_mapping,
+                    icon_color=ft.Colors.RED_700,
+                ),
             ],
             alignment=ft.MainAxisAlignment.START,
         )
@@ -61,7 +67,7 @@ class MappingRow(ft.Container):
         self.obs_input.value = None
         self.update_link_status()
         self.obs_input.update()
-    
+
     def update_link_status(self):
         if self.obs_input.value is None or self.obs_input.value == "":
             self.content.controls[3].icon = ft.Icons.LINK_OFF
