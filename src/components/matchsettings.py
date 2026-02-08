@@ -13,6 +13,7 @@ class MatchSettingsCard(ft.Container):
         self.expand = True
         self.padding = 0
 
+        self.current_drag_src = None
         self.player_states = {}
 
         min_p = cfg.data.get("min_players", 2)
@@ -76,7 +77,11 @@ class MatchSettingsCard(ft.Container):
                 ),
             ],
         )
-
+    
+    def _set_drag_source(self, i):
+        self.current_drag_src = i
+    
+    
     def _update_match_title(self):
         title = self.match_title.value
         obs_source = cfg.get_mapping("Round Title")
@@ -102,18 +107,80 @@ class MatchSettingsCard(ft.Container):
 
     def _generate_cards(self, count):
         self.cards_row.controls.clear()
-
-        # TODO Implement Character List from Files
+        self.player_cards = []
 
         for i in range(1, count + 1):
             saved_data = self.player_states.get(i, {})
-
+            drag_handle = ft.Draggable(
+                group="player_swap",
+                content=ft.Icon(
+                    ft.Icons.DRAG_INDICATOR, color="white54", tooltip="Drag to Swap"
+                ),
+                content_when_dragging=ft.Container(
+                    width=50,
+                    height=50,
+                    bgcolor="primary",
+                    border_radius=5,
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Icon(ft.Icons.SWAP_HORIZ, color="white"),
+                ),
+                on_drag_start=lambda e, idx=i: self._set_drag_source(idx),
+            )
             card = PlayerCard(
                 player_num=i,
                 initial_data=saved_data,
                 on_update=self._handle_card_update,
+                drag_handle=drag_handle,
             )
-            self.cards_row.controls.append(card)
+            self.player_cards.append(card)
+
+            drag_target = ft.DragTarget(
+                group="player_swap",
+                content=card,
+                on_accept=self._on_card_drop,
+                on_will_accept=self._on_drag_enter,
+                on_leave=self._on_drag_leave,
+                data=str(i),
+            )
+
+            self.cards_row.controls.append(drag_target)
+
+    def _on_card_drop(self, e):
+        try:
+            src_index = self.current_drag_src
+            dest_str = e.control.data
+            
+            if src_index is None:
+                print("No source index set for drag operation.")
+                return
+            
+            dest_index = int(dest_str)
+
+            if src_index == dest_index:
+                print("Source and destination are the same, no swap needed.")
+                return
+            self._swap_players(src_index, dest_index)
+            self._on_drag_leave(e)
+            
+        except Exception as e:
+            print(f"Error handling card drop: {e}")
+
+
+    def _swap_players(self, p1_idx, p2_idx):
+        idx1 = p1_idx - 1
+        idx2 = p2_idx - 1
+
+        card1 = self.player_cards[idx1]
+        card2 = self.player_cards[idx2]
+
+        data1 = card1.get_data()
+        data2 = card2.get_data()
+        card1.set_data(data2)
+        card2.set_data(data1)
+
+        self.page.show_dialog(
+            ft.SnackBar(ft.Text(f"Swapped Player {p1_idx} and Player {p2_idx}"))
+        )
 
     def _handle_card_update(self, player_num, key, value):
         print(f"Update detected: Player {player_num} - {key}: {value}")
@@ -148,6 +215,16 @@ class MatchSettingsCard(ft.Container):
                 print(f"No OBS source mapped for Player {player_num} {key}")
         except Exception as e:
             print(f"Error updating OBS source for Player {player_num} {key}: {e}")
+
+    def _on_drag_enter(self, e):
+        card = e.control.content
+        card.border = ft.Border.all(2, "yellow")
+        card.update()
+
+    def _on_drag_leave(self, e):
+        card = e.control.content
+        color = card.color_dropdown.value
+        card._update_card_border(color)
 
     def _reset_player_data(self, e):
         self.player_states = {}
