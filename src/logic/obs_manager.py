@@ -1,6 +1,6 @@
 from obswebsocket import obsws, requests
 from obswebsocket.exceptions import ConnectionFailure
-
+from logic.config import cfg
 
 class OBSManager:
     def __init__(self, host, port, password):
@@ -117,4 +117,8 @@ class OBSManager:
             return None
 
 
-obs_manager = OBSManager("localhost", "4455", "zCaqLyYG10P4S5QY")
+obs_manager = OBSManager(
+    cfg.data.get("obs_host"),
+    cfg.data.get("obs_port"),
+    cfg.data.get("obs_password")
+)

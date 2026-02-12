@@ -7,7 +7,7 @@
     "max_players": 4,
     "mappings": {
         "Round Title": "Match Title",
-        "Tournament Title": null,
+        "Tournament Title": "Match Title",
         "Scrolling Text": null,
         "Bracket URL": null,
         "Caster 1 Name": null,
