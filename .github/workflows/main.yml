@@ -1,0 +1,36 @@
+name: Build Smash Overlay
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          uv pip install flet requests # Add other deps like obs-websocket-py
+
+      - name: Build Windows App
+        run: |
+          # We use --onedir (default) for Flet 0.80+ stability
+          uv run flet build windows --yes
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmashOverlay-Windows
+          # Flet puts the directory build in build/windows
+          path: build/windows
