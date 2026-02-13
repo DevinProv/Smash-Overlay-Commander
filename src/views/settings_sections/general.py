@@ -14,7 +14,7 @@ class GeneralSection(ft.Container):
             leading_icon=ft.Icons.PALETTE,
             value=cfg.get_theme(),
             options=[ft.dropdown.Option(t) for t in cfg.get_theme_list()],
-            on_select=self.on_theme_change, # Dropdowns are fine on_change
+            on_select=self.on_theme_change, 
         )
 
         # --- OBS Settings ---
@@ -22,8 +22,8 @@ class GeneralSection(ft.Container):
             label="OBS Host",
             prefix_icon=ft.Icons.COMPUTER,
             value=cfg.data.get("obs_host", "localhost"),
-            on_blur=self.save_field_data, # Save only when done typing
-            data="obs_host", # Store the config key in the control's data
+            on_blur=self.save_field_data,
+            data="obs_host", 
         )
         
         self.obs_port_field = ft.TextField(
@@ -70,14 +70,32 @@ class GeneralSection(ft.Container):
             on_blur=self.validate_players,
             expand=True
         )
-
+        # --- Asset Folder Picker ---
+    
+        self.character_path_field = ft.TextField(
+            label="Character Assets Root Folder",
+            prefix_icon=ft.Icons.FOLDER,
+            value=cfg.data.get("character_assets_root", "characters"),
+            read_only=True,
+            expand=True
+        )
+        
+        self.browse_btn = ft.IconButton(
+            icon=ft.Icons.FOLDER_OPEN,
+            tooltip="Browse for Character Assets Folder",
+            on_click=self.browse_directrory_async
+        )
         # --- Layout ---
         self.content = ft.Column(
             scroll=ft.ScrollMode.AUTO,
             controls=[
                 ft.Text("General Settings", size=24, weight=ft.FontWeight.BOLD),
                 ft.Divider(height=20),
-                
+                self._build_section(
+                    "Asset Management", 
+                    "Configure the root folder for your assets (images, etc.)",
+                    [ft.Row([self.character_path_field, self.browse_btn])]
+                ),
                 self._build_section(
                     "Appearance", 
                     "Theme and visual settings", 
@@ -125,7 +143,7 @@ class GeneralSection(ft.Container):
         return ft.ExpansionTile(
             title=ft.Text(title, weight=ft.FontWeight.W_500),
             subtitle=ft.Text(subtitle, size=12, opacity=0.8),
-            expanded=True, # 'expanded' is deprecated in newer Flet, use initially_expanded
+            expanded=True, 
             controls=[
                 ft.Container(
                     content=ft.Column(controls=controls, spacing=15),
@@ -144,6 +162,25 @@ class GeneralSection(ft.Container):
             self.page.bgcolor = theme_manager.get_background_color(theme_name)
             self.page.update()
     
+    async def browse_directrory_async(self, e):
+        picker = ft.FilePicker()
+
+        
+        path = await picker.get_directory_path()
+        
+        if path:
+            self.character_path_field.value = path
+            cfg.data["character_assets_root"] = path
+            cfg.save()
+
+            from logic.charmanager import char_manager
+            char_manager.refresh()
+
+            self.character_path_field.update()
+            self.show_snackbar(f"Character assets folder set to {path} and character assets refreshed", ft.Colors.GREEN)
+        
+
+        
     def test_obs_connection(self, e):
         from logic.obs_manager import obs_manager
         self.test_connection_btn.icon = ft.Icons.HOURGLASS_EMPTY

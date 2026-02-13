@@ -9,9 +9,11 @@ class PlayerCard(ft.Container):
         super().__init__()
         self.player_num = player_num
         self.on_update = on_update
-
+        char_manager.register(self)
+        
         data = initial_data or {}
-
+        self.animate_scale = ft.Animation(300, ft.AnimationCurve.EASE_OUT_BACK)
+        self.scale = 1.0
         self.score = data.get("score", 0)
         self.player_name = data.get("name", f"Player {player_num}")
         self.is_editing_name = False
@@ -188,6 +190,24 @@ class PlayerCard(ft.Container):
             content_padding=15,
         )
 
+    def update_character_options(self):
+        new_list = char_manager.get_character_names()
+        
+        self.char_dropdown.options = [
+            ft.dropdown.Option(key=c, text=c.replace("_", " ").title())
+            for c in new_list
+        ]
+    
+        if self.char_dropdown.value and self.char_dropdown.value not in new_list:
+            self.char_dropdown.value = None
+            self.char_img.src = ""
+            self.char_img.opacity = 0
+            self.color_dropdown.options = []
+            self.color_dropdown.disabled = True
+            self.color_dropdown.value = None
+        self.char_dropdown.update()
+        self.update()
+        
     def _load_colors_for_char(self, char):
         colors = char_manager.get_colors(char)
         self.color_dropdown.options = []

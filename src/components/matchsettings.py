@@ -113,16 +113,18 @@ class MatchSettingsCard(ft.Container):
             saved_data = self.player_states.get(i, {})
             drag_handle = ft.Draggable(
                 group="player_swap",
+                data=str(i),
                 content=ft.Icon(
                     ft.Icons.DRAG_INDICATOR, color="white54", tooltip="Drag to Swap"
                 ),
                 content_when_dragging=ft.Container(
                     width=50,
                     height=50,
-                    bgcolor="primary",
+                    bgcolor=ft.Colors.BLUE_GREY_700,
                     border_radius=5,
                     alignment=ft.Alignment.CENTER,
                     content=ft.Icon(ft.Icons.SWAP_HORIZ, color="white"),
+                    opacity=0.9
                 ),
                 on_drag_start=lambda e, idx=i: self._set_drag_source(idx),
             )
@@ -216,13 +218,29 @@ class MatchSettingsCard(ft.Container):
         except Exception as e:
             print(f"Error updating OBS source for Player {player_num} {key}: {e}")
 
+    def _on_drag_start(self, e):
+        self.current_drag_src = e.control.data
+        pass
+
     def _on_drag_enter(self, e):
         card = e.control.content
         card.border = ft.Border.all(2, "yellow")
+        card.scale = 0.95
+        card.shadow = ft.BoxShadow(
+            blur_radius=20,
+            color=ft.Colors.with_opacity(0.5, ft.Colors.CYAN_400)
+        )
         card.update()
 
     def _on_drag_leave(self, e):
         card = e.control.content
+        card.scale = 1.0
+        card.shadow = ft.BoxShadow(
+            spread_radius=0,
+            blur_radius=15,
+            color=ft.Colors.with_opacity(0.2, "black"),
+            offset=ft.Offset(0, 5),
+        )
         color = card.color_dropdown.value
         card._update_card_border(color)
 
