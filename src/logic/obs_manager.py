@@ -115,6 +115,15 @@ class OBSManager:
         except Exception as e:
             print(f"Error retrieving source from OBS: {e}")
             return None
+    
+    def test_connection(self, host, port, password):
+        try:
+            test_ws = obsws(host, port, password)
+            test_ws.connect()
+            test_ws.disconnect()
+            return True
+        except ConnectionFailure:
+            return False
 
 
 obs_manager = OBSManager(

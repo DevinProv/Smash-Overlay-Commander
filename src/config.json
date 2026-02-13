@@ -1,0 +1,29 @@
+{
+    "theme": "Moonlit Mist",
+    "obs_host": "localhost",
+    "obs_port": 4455,
+    "obs_password": "",
+    "min_players": 2,
+    "max_players": 4,
+    "mappings": {
+        "Round Title": null,
+        "Tournament Title": null,
+        "Scrolling Text": null,
+        "Bracket URL": null,
+        "Caster 1 Name": null,
+        "Caster 2 Name": null,
+        "Set Score": null,
+        "Player 1 Name": null,
+        "Player 1 Score": null,
+        "Player 1 Character": null,
+        "Player 2 Name": null,
+        "Player 2 Score": null,
+        "Player 2 Character": null,
+        "Player 3 Name": null,
+        "Player 3 Score": null,
+        "Player 3 Character": null,
+        "Player 4 Name": null,
+        "Player 4 Score": null,
+        "Player 4 Character": null
+    }
+}

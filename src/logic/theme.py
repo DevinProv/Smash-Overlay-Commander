@@ -1,30 +1,20 @@
-from pathlib import Path
-import json
 import flet as ft
+from logic.file_handler import JsonFileHandler
 
-CURRENT_DIR = Path(__file__).resolve().parent
-
-THEME_FILE_PATH = CURRENT_DIR.parent / "assets" / "themes.json"
-
-
-class ThemeManager:
+class ThemeManager(JsonFileHandler):
     def __init__(self):
-        self.themes = self._load_themes()
+        super().__init__("themes.json", folder="assets")
+        print(f"DEBUG: Looking for themes at: {self._path}")
+        self.themes_data = self.load_json(default={"themes": {}})
 
-    def _load_themes(self):
-        if not THEME_FILE_PATH.exists():
-            print(f"Warning: Theme file not found at {THEME_FILE_PATH}")
-            return self._get_fallback_theme()
-
-        with open(THEME_FILE_PATH, "r") as f:
-            return json.load(f)
-
-    def get_theme_names(self):
-        return list(self.themes.keys())
-
+    def get_themes(self):
+        return self.themes_data.get("themes", {})
+    
     def get_theme(self, theme_name):
-        data = self.themes.get(theme_name, list(self.themes.values())[0])
-
+        themes = self.get_themes()
+        print(f"Themes: {themes}")
+        data = themes.get(theme_name, list(themes.values())[0])  # Return first theme if not found
+        
         return ft.Theme(
             color_scheme=ft.ColorScheme(
                 surface_tint=data["surface"],
@@ -33,13 +23,13 @@ class ThemeManager:
                 secondary=data["secondary"],
                 on_primary=data["on_primary"],
                 on_surface=data["on_surface"],
-                outline=data["outline"],
+                outline=data["outline"]
             )
         )
-
+    
     def get_background_color(self, theme_name):
-        data = self.themes.get(theme_name, list(self.themes.values())[0])
-        return data.get("background", "#111111")
-
+        themes = self.get_themes()
+        data = themes.get(theme_name, list(themes.values())[0])  # Return first theme if not found
+        return data.get("background", "#FFFFFF")
 
 theme_manager = ThemeManager()

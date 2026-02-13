@@ -1,10 +1,4 @@
-import json
-import os
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
-CONFIG_FILE = os.path.join(PROJECT_ROOT, "config.json")
-
+from logic.file_handler import JsonFileHandler
 
 STATIC_KEYS = [
     "Round Title",
@@ -17,8 +11,11 @@ STATIC_KEYS = [
 ]
 
 
-class ConfigManager:
+class ConfigManager(JsonFileHandler):
     def __init__(self):
+        
+        super().__init__("config.json")
+        
         self.default_settings = {
             "theme": "Moonlit Mist",
             "obs_host": "localhost",
@@ -43,46 +40,33 @@ class ConfigManager:
         return keys
 
     def load(self):
-        if os.path.exists(CONFIG_FILE):
-            try:
-                with open(CONFIG_FILE, "r") as f:
-
-                    saved_data = json.load(f)
-
-                    for key, val in saved_data.items():
-                        if key != "mappings":
-                            self.data[key] = val
-
-                    supported_keys = self._generate_supported_keys()
-
-                    current_mappings = {k: None for k in supported_keys}
-
-                    saved_mappings = saved_data.get("mappings", {})
-                    current_mappings.update(saved_mappings)
-
-                    clean_mappings = {
-                        k: v for k, v in current_mappings.items() if k in supported_keys
-                    }
-
-                    self.data["mappings"] = clean_mappings
-
-            except Exception as e:
-                print(f"Error loading config: {e}.")
-                self.data["mappings"] = {
-                    k: None for k in self._generate_supported_keys()
-                }
-        else:
-            print("No config file found. Creating new one.")
-            self.data["mappings"] = {k: None for k in self._generate_supported_keys()}
+        loaded_data = self.load_json(default={})
+        
+        if not loaded_data:
             self.save()
+            return
+        
+        for key, val in loaded_data.items():
+            if key != "mappings":
+                self.data[key] = val
+
+        supported_keys = self._generate_supported_keys()
+
+        current_mappings = {k: None for k in supported_keys}
+
+        saved_mappings = loaded_data.get("mappings", {})
+        current_mappings.update(saved_mappings)
+
+        clean_mappings = {
+            k: v for k, v in current_mappings.items() if k in supported_keys
+        }
+
+        self.data["mappings"] = clean_mappings
+        self.save()
 
     def save(self):
-        try:
-            with open(CONFIG_FILE, "w") as f:
-                json.dump(self.data, f, indent=4)
-        except Exception as e:
-            print(f"Error saving config: {e}.")
-
+        self.save_json(self.data)
+        
     def get_mapping(self, key):
         return self.data["mappings"].get(key)
 
@@ -96,6 +80,18 @@ class ConfigManager:
     def get_theme(self):
         return self.data.get("theme", "Moonlit Mist")
 
+    def get_theme_list(self):
+        theme_handler = JsonFileHandler("themes.json", folder="assets")
+        
+        data = theme_handler.load_json(default={})
+        themes= data.get("themes", {})
+        
+        if not themes:
+            return ["Moonlit Mist"]
+        
+        return list(themes.keys())
+    
+    
     def set_mapping(self, key, value):
         self.data["mappings"][key] = value
         self.save()

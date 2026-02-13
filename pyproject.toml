@@ -16,6 +16,8 @@ dev = [
     "flet-cli>=0.80.5",
     "flet-desktop-light>=0.80.5",
     "flet-web>=0.80.5",
+    "obs-websocket-py>=1.0",
+    ""
 ]
 
 [tool.flet]

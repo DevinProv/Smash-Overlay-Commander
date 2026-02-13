@@ -32,7 +32,6 @@ class CharacterManager:
                 if colors:
                     self.data[char_name] = colors
 
-        print(f"Loaded character data: {self.data}")
 
     def get_character_names(self):
         return sorted(list(self.data.keys()))

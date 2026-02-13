@@ -1,6 +1,6 @@
 import flet as ft
 from views.settings_sections import MappingSection
-
+from views.settings_sections.general import GeneralSection
 
 class SettingsView(ft.Container):
     def __init__(self):
@@ -14,8 +14,7 @@ class SettingsView(ft.Container):
         )
 
         self.sections = {
-            "General": self._get_general_section,
-            "Appearance": self._get_appearance_section,
+            "General": GeneralSection,
             "Mapping": MappingSection,
         }
         self.nav_buttons = []
@@ -54,7 +53,7 @@ class SettingsView(ft.Container):
             expand=True,
         )
 
-        self._set_active_category("Appearance", should_update=False)
+        self._set_active_category("General", should_update=False)
 
     def _create_nav_button(self, text):
         return ft.Container(
@@ -90,11 +89,5 @@ class SettingsView(ft.Container):
 
             self.update()
 
-    def _get_general_section(self):
-        return ft.Column([ft.Text("General Settings", size=20, weight="bold")])
 
-    def _get_appearance_section(self):
-        return ft.Column([ft.Text("Appearance Settings", size=20, weight="bold")])
 
-    def _get_mapping_section(self):
-        return MappingSection()
