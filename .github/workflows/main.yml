@@ -21,12 +21,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          uv pip install flet requests # Add other deps like obs-websocket-py
+          uv pip install --system flet requests obs-websocket-py# Add other deps like obs-websocket-py
 
       - name: Build Windows App
         run: |
           # We use --onedir (default) for Flet 0.80+ stability
-          uv run flet build windows --yes
+          flet build windows --yes
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
