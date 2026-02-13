@@ -161,3 +161,5 @@ cython_debug/
 
 # Flet
 storage/
+assets/images.zip
+assets/images/placeholder.png

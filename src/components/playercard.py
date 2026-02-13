@@ -105,15 +105,34 @@ class PlayerCard(ft.Container):
         )
 
         initial_img_src = ""
+        init_opacity = 0.3
+        init_color = None
+        init_blend_mode = ft.BlendMode.SRC_IN
         if saved_char and saved_color:
             initial_img_src = char_manager.get_asset_path(saved_char, saved_color)
+            init_opacity = 1.0
+            init_color = None
+            init_blend_mode = None
+        else:
+            initial_img_src = char_manager.get_asset_path(None, None)
 
         self.char_image = ft.Image(
             src=initial_img_src,
             width=250,
             height=250,
             fit="contain",
-            opacity=1.0 if initial_img_src else 0,
+            opacity = init_opacity,
+            color=init_color,
+            color_blend_mode=init_blend_mode,
+            animate_opacity=300,
+        
+        )
+        self.image_switcher = ft.AnimatedSwitcher(
+            content=self.char_image,
+            transition=ft.AnimatedSwitcherTransition.FADE,
+            duration=300,
+            reverse_duration=300,
+            switch_in_curve=ft.AnimationCurve.EASE_OUT
         )
         self.glow_container = ft.Container(expand=True, border_radius=20, gradient=None)
 
@@ -142,7 +161,7 @@ class PlayerCard(ft.Container):
                     self.header_row,
                     ft.Divider(height=1, color="white12"),
                     ft.Container(
-                        content=self.char_image,
+                        content=self.image_switcher,
                         alignment=ft.Alignment.CENTER,
                         expand=True,
                     ),
@@ -160,6 +179,7 @@ class PlayerCard(ft.Container):
 
         self.content = ft.Stack(controls=[self.glow_container, self.ui_layer])
 
+        
         if saved_char:
             self._load_colors_for_char(saved_char)
             self._update_card_border(
@@ -167,6 +187,8 @@ class PlayerCard(ft.Container):
             )
         else:
             self._update_card_border("default", init_phase=True)
+
+        
 
     def _create_dropdown(self, hint, value, options, icon, on_change, disabled=False):
         opts = [
@@ -200,11 +222,12 @@ class PlayerCard(ft.Container):
     
         if self.char_dropdown.value and self.char_dropdown.value not in new_list:
             self.char_dropdown.value = None
-            self.char_img.src = ""
-            self.char_img.opacity = 0
+            self.char_image.src = ""
+            self.char_image.opacity = 0
             self.color_dropdown.options = []
             self.color_dropdown.disabled = True
             self.color_dropdown.value = None
+            self._update_image(None, None)
         self.char_dropdown.update()
         self.update()
         
@@ -330,12 +353,21 @@ class PlayerCard(ft.Container):
 
     def _update_image(self, char, color_file):
         src = char_manager.get_asset_path(char, color_file)
-        self.char_image.src = src
-        self.char_image.opacity = 1
-        if self.char_image.page:
-            self.char_image.update()
+        if not char or not color_file:
+            self.char_image.src = src
+            self.char_image.opacity = 0.3
+            self.char_image.color = ft.Colors.BLACK
+            self.char_image.color_blend_mode = ft.BlendMode.SRC_IN
+        else:
+            self.char_image.src = src
+            self.char_image.opacity = 1.0
+            self.char_image.color = None
+            self.char_image.color_blend_mode = None
             self._update_card_border(color_file)
-
+        
+        if self.page:
+            self.char_image.update()
+        
     def _trigger_update(self, key, value):
         if self.on_update:
             self.on_update(self.player_num, key, value)

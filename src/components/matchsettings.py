@@ -150,6 +150,7 @@ class MatchSettingsCard(ft.Container):
     def _on_card_drop(self, e):
         try:
             src_index = self.current_drag_src
+            self.current_drag_src = None
             dest_str = e.control.data
             
             if src_index is None:
@@ -160,6 +161,7 @@ class MatchSettingsCard(ft.Container):
 
             if src_index == dest_index:
                 print("Source and destination are the same, no swap needed.")
+                self._on_drag_leave(e)
                 return
             self._swap_players(src_index, dest_index)
             self._on_drag_leave(e)

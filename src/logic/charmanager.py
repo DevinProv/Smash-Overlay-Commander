@@ -57,7 +57,11 @@ class CharacterManager:
         return self.data.get(char_name, [])
 
     def get_asset_path(self, char_name, color_filename):
-        return os.path.join(self.char_dir, char_name, color_filename)
-
+        if not char_name or not color_filename:
+            return os.path.join(self.char_dir, "placeholder.png")
+        path = os.path.join(self.char_dir, char_name, color_filename)
+        if os.path.exists(path):
+            return path
+        return os.path.join(self.char_dir, "placeholder.png")
 
 char_manager = CharacterManager()
