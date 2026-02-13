@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          uv pip install --system flet requests obs-websocket-py# Add other deps like obs-websocket-py
+          uv pip install --system flet requests obs-websocket-py # Add other deps like obs-websocket-py
 
       - name: Build Windows App
         run: |
