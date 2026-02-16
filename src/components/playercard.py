@@ -1,6 +1,5 @@
 import flet as ft
 import threading
-from components.counter import CounterInput
 from logic.charmanager import char_manager
 
 

@@ -254,14 +254,13 @@ class MatchSettingsCard(ft.Container):
 
     def _update_char_image_source(self, player_num, char_name, image_file):
         source = cfg.get_mapping(f"Player {player_num} Character")
+        path = cfg.data.get("character_assets_root", "")
+        abs_path = os.path.join(path, image_file)
         if not source:
             print(f"No OBS source mapped for Player {player_num} Character")
             return
 
-        project_root = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
-        abs_path = os.path.join(project_root, "assets", "images", char_name, image_file)
+        print(f"Updating character image for Player {player_num}: {char_name} -> {abs_path}")
 
         try:
             obs_manager.set_source_value(source, abs_path)
