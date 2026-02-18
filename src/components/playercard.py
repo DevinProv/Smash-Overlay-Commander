@@ -1,13 +1,18 @@
 import flet as ft
 import threading
+import time
 from logic.charmanager import char_manager
-
+from logic.db_manager import db
 
 class PlayerCard(ft.Container):
     def __init__(self, player_num, initial_data=None, on_update=None, drag_handle=None):
         super().__init__()
         self.player_num = player_num
         self.on_update = on_update
+        
+        self.blur_timer = None
+        self.suggestion_clicked = False
+        
         char_manager.register(self)
         
         data = initial_data or {}
@@ -19,6 +24,9 @@ class PlayerCard(ft.Container):
         saved_char = data.get("character", None)
         saved_color = data.get("color", None)
 
+
+        #Get Player Names from DB
+        
         # Style
         self.border_radius = 15
         self.padding = 0
@@ -66,6 +74,7 @@ class PlayerCard(ft.Container):
                 controls=[self.btn_minus, self.score_display, self.btn_plus],
             ),
         )
+        # Player Name Input
         self.name_input = ft.TextField(
             value=self.player_name,
             text_size=24,
@@ -78,15 +87,42 @@ class PlayerCard(ft.Container):
             bgcolor="transparent",
             on_focus=self._on_name_focus,
             on_submit=self._save_name,
-            on_blur=self._save_name,
+            on_blur=self._on_blur_name,
+            on_change=self._on_name_change
         )
+        
+        self.suggestion_column = ft.Column(spacing=0)
+        self.suggestion_container = ft.Container(
+            content=self.suggestion_column,
+            visible=False,
+            bgcolor="#252525",
+            border=ft.Border.all(1, "white12"),
+            border_radius=ft.BorderRadius.only(bottom_left=10, bottom_right=10),
+            padding=5,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=10,
+                color=ft.Colors.BLACK,
+                offset=ft.Offset(0, 5),
+            ),
+            top=60,
+            left=70,
+            right=60,
+        )
+
         self.name_wrapper = ft.Container(
             content=self.name_input,
             on_click=self._enable_name_edit,
             expand=True,
             padding=0,
+            height=40
         )
-        
+        self.name_save_btn = ft.IconButton(
+            ft.Icons.SAVE_ALT,
+            tooltip="Save Player with Defaults",
+            icon_color="white24",
+            on_click=self._save_player_data
+        )
         handle_control = drag_handle if drag_handle else ft.Container()
 
         self.header_row = ft.Row(
@@ -97,7 +133,8 @@ class PlayerCard(ft.Container):
                     controls=[
                         handle_control,
                         ft.Container(width=10),
-                        self.name_wrapper
+                        self.name_wrapper,
+                        self.name_save_btn
                     ],
                 )
             ],
@@ -176,7 +213,7 @@ class PlayerCard(ft.Container):
             ),
         )
 
-        self.content = ft.Stack(controls=[self.glow_container, self.ui_layer])
+        self.content = ft.Stack(controls=[self.glow_container, self.ui_layer, self.suggestion_container])
 
         
         if saved_char:
@@ -248,7 +285,59 @@ class PlayerCard(ft.Container):
         self.name_input.border_color = "outline"
         self.name_input.bgcolor = "surface"
         self.update()
-    
+    def _on_name_change(self, e):
+        typed = self.name_input.value.strip()
+        
+        if not typed:
+            self.suggestion_container.visible = False
+            self.suggestion_container.update()
+            return
+
+        results = db.search_players(typed)
+        results = [p for p in results if p['name'].lower() != typed.lower()]
+        
+        if not results:
+            self.suggestion_container.visible = False
+            self.suggestion_container.update()
+            return
+
+        self.suggestion_column.controls.clear()
+        for p in results[:3]:
+            tile = ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.HISTORY, size=14, color="white54"),
+                    ft.Text(p['name'], color="white70", size=14)
+                ],
+                    spacing=10),
+                padding=10,
+                ink=True,
+                on_click=lambda e, name=p['name']: self._accept_suggestion(e, name),
+                border_radius=5,
+                bgcolor="#333333"
+            )
+            self.suggestion_column.controls.append(tile)
+        self.suggestion_container.visible = True
+        self.suggestion_container.update()
+    def _on_blur_name(self, e):
+        def delayed_save():
+            time.sleep(0.2)
+            if not self.suggestion_clicked:
+                self._save_name(e)
+            
+            self.suggestion_clicked = False
+        self.blur_timer = threading.Thread(target=delayed_save, daemon=True)
+        self.blur_timer.start()
+        
+    def _accept_suggestion(self, e, name):
+        print(f"Accepted suggestion: {name}")
+        self.suggestion_clicked = True
+        self.name_input.value = name
+        self.player_name = name
+        self.suggestion_container.visible = False
+        self.suggestion_container.update()
+        
+        self._save_name(None)
+            
     def _enable_name_edit(self, e):
         self.name_input.disabled = False
         self.name_input.border_color = "outline"
@@ -258,13 +347,64 @@ class PlayerCard(ft.Container):
         self.name_input.focus()
     
     def _save_name(self, e):
-        self.player_name = self.name_input.value
+        
+        new_name = self.name_input.value.strip()
+        self.player_name = new_name
         self.name_input.read_only = True
         self.name_input.border_color = "transparent"
         self.name_input.bgcolor = "transparent"
+        self.suggestion_container.visible = False
+        if self.suggestion_container.page:
+            self.suggestion_container.update()
+        if new_name:
+            player_data = db.get_player(new_name)
+            if player_data:
+                found_char = player_data["default_char"]
+                found_color = player_data["default_color"]
+                
+                self.char_dropdown.value = found_char
+                self._load_colors_for_char(found_char)
+                self.color_dropdown.value = found_color
+                
+                self._update_image(found_char, found_color)
+                self._update_card_border(found_color)
+                               
+                self.name_save_btn.icon_color = "green"
+                self.name_save_btn.tooltip = "Loaded from Database"
+                self.name_save_btn.update()
+            else:
+                self.name_save_btn.icon_color = "white24"
+                self.name_save_btn.tooltip = "Save Player with Defaults"
+                self.name_save_btn.update()
+        
         
         self._trigger_update("name", self.player_name)
+        self._trigger_update("character", self.char_dropdown.value)
+        self._trigger_update("color", self.color_dropdown.value)
         self.update()
+    
+    def _save_player_data(self, e):
+        name = self.player_name
+        char = self.char_dropdown.value
+        color = self.color_dropdown.value
+        
+        if not name or "Player" in name:
+            return
+        
+        success = db.upsert_player(name,char,color)
+        if success:
+            self.name_save_btn.icon = ft.Icons.CHECK_CIRCLE
+            self.name_save_btn.icon_color = ft.Colors.GREEN
+            self.name_save_btn.update()
+            import time
+
+            def reset():
+                time.sleep(1.5)
+                self.name_save_btn.icon = ft.Icons.SAVE_ALT
+                self.name_save_btn.icon_color = "white24"
+                self.name_save_btn.update()
+            threading.Thread(target=reset).start()
+            
     
     def _increment_score(self, e):
         self.score += 1

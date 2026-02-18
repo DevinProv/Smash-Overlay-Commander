@@ -15,7 +15,7 @@ class ConfigManager(JsonFileHandler):
     def __init__(self):
         
         super().__init__("config.json")
-        
+        self.config_file = "config.json"
         self.default_settings = {
             "theme": "Moonlit Mist",
             "obs_host": "localhost",

@@ -18,6 +18,10 @@ class Router:
     def go(self, index):
         if index not in self.cache:
             self.cache[index] = self.routes[index]()
-
-        self.body.content = self.cache[index]
+        view = self.cache[index]
+        self.body.content = view
         self.body.update()
+        
+        if hasattr(view, "_refresh_list"):
+            view._refresh_list()
+
